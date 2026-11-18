@@ -19,6 +19,8 @@ ONE DAY" + topic legend; 2 heroes + 10 cards (2x5) = 12 illustrated;
 world map with numbered pins; "ALSO ON" 28 one-liners in 2 columns;
 sources footer. Flat vector drawings only, no photos, no AI images.
 Deterministic: same input bytes produce the same output bytes.
+v3 (Grok follow-up): art band 48px; chip/chart/virus/syringe/docs scenes
+redrawn per card so each reads at 300px; no duplicate plane/plus scenes.
 
 Run:  python3 tools/build_image.py   (writes entry.png next to repo root)
 """
@@ -216,31 +218,40 @@ def draw_hero_art(d, kind, x, y, w, h):
             d.ellipse([mx + dx - 3, gy - 22 + dy - 3, mx + dx + 3, gy - 22 + dy + 3], fill=RED)
             d.line([(mx + dx - 7, gy - 22 + dy), (mx + dx + 7, gy - 22 + dy)], fill=RED, width=1)
     elif kind == "plane":
-        for cx0, cy0 in ((x + 30, y + 14), (x + w - 40, y + 22), (x + w // 2, y + 8)):
-            d.ellipse([cx0 - 14, cy0 - 5, cx0 + 14, cy0 + 5], fill=(255, 255, 255))
+        d.rectangle([x, y, x + w, y + h], fill=(30, 60, 110))
+        for cx0, cy0 in ((x + 30, y + 12), (x + w - 36, y + 20)):
+            d.ellipse([cx0 - 12, cy0 - 4, cx0 + 12, cy0 + 4], fill=(255, 255, 255))
         px, py = x + w // 2, y + h // 2 + 4
-        d.polygon([(px - 34, py), (px + 30, py - 8), (px + 30, py + 8)], fill=NAVY)
-        d.line([(px - 6, py - 2), (px + 2, py - 16)], fill=NAVY, width=3)
-        d.line([(px - 6, py + 2), (px + 2, py + 16)], fill=NAVY, width=3)
+        d.polygon([(px - 42, py), (px + 38, py - 10), (px + 38, py + 10)],
+                  fill=(255, 255, 255))
+        d.line([(px - 8, py - 3), (px + 2, py - 22)], fill=(255, 255, 255), width=4)
+        d.line([(px - 8, py + 3), (px + 2, py + 22)], fill=(255, 255, 255), width=4)
+        d.line([(px - 30, py - 2), (px - 38, py - 14)], fill=(255, 255, 255), width=3)
         d.rectangle([x, y + h - 6, x + w, y + h], fill=(120, 170, 200))
     elif kind == "chip":
         d.rectangle([x, y, x + w, y + h], fill=NAVY)
-        for lx in (x + 12, x + w // 2, x + w - 12):
-            d.line([(lx, y + 4), (lx, y + h - 4)], fill=(90, 140, 190), width=1)
-        for ly in (y + 10, y + h - 10):
-            d.line([(x + 4, ly), (x + w - 4, ly)], fill=(90, 140, 190), width=1)
+        for lx in (x + 14, x + w - 14):
+            d.line([(lx, y + 4), (lx, y + h - 4)], fill=(90, 140, 190), width=2)
+        for ly in (y + 8, y + h - 8):
+            d.line([(x + 6, ly), (x + w - 6, ly)], fill=(90, 140, 190), width=2)
         cx, cy = x + w // 2, y + h // 2
-        d.rectangle([cx - 16, cy - 10, cx + 16, cy + 10], fill=(31, 78, 121),
-                    outline=(255, 214, 120), width=2)
-        d.rectangle([cx - 6, cy - 4, cx + 6, cy + 4], fill=(255, 214, 120))
+        for px in (cx - 12, cx, cx + 12):
+            d.line([(px, cy - 18), (px, cy - 10)], fill=(255, 214, 120), width=3)
+            d.line([(px, cy + 10), (px, cy + 18)], fill=(255, 214, 120), width=3)
+        d.rectangle([cx - 18, cy - 10, cx + 18, cy + 10], fill=(31, 78, 121),
+                    outline=(255, 214, 120), width=3)
+        d.rectangle([cx - 7, cy - 4, cx + 7, cy + 4], fill=(255, 214, 120))
     elif kind == "chart":
         d.rectangle([x, y, x + w, y + h], fill=(255, 253, 247))
-        base = y + h - 8
-        for i, bh in enumerate((10, 18, 14, 26, 20, 30)):
-            bx = x + 8 + i * ((w - 16) // 6)
-            d.rectangle([bx, base - bh, bx + (w - 16) // 6 - 4, base],
-                        fill=RED if i in (3, 5) else NAVY2)
-        d.line([(x + 4, base - 34), (x + w - 4, base - 6)], fill=RED, width=2)
+        base = y + h - 6
+        bw = (w - 24) // 4
+        for i, bh in enumerate((34, 26, 18, 10)):
+            bx = x + 12 + i * bw
+            d.rectangle([bx, base - bh, bx + bw - 6, base],
+                        fill=RED if i == 3 else NAVY2)
+        # thick red down arrow, top right
+        ax, ay = x + w - 30, y + 8
+        d.polygon([(ax, ay), (ax + 18, ay), (ax + 9, ay + 14)], fill=RED)
     elif kind == "health":
         d.rectangle([x, y, x + w, y + h], fill=(255, 240, 240))
         cx, cy = x + w // 2, y + h // 2
@@ -274,6 +285,10 @@ def draw_hero_art(d, kind, x, y, w, h):
         d.line([(cx - 16, cy), (cx + 16, cy)], fill=NAVY, width=1)
         d.ellipse([cx + 20, cy - 4, cx + 28, cy + 4], fill=RED)
         d.ellipse([cx - 28, cy + 6, cx - 20, cy + 14], fill=RED)
+        # thick red migration arrow across the globe
+        d.line([(cx - 24, cy + 14), (cx + 24, cy - 14)], fill=RED, width=3)
+        d.polygon([(cx + 24, cy - 14), (cx + 12, cy - 14), (cx + 24, cy - 2)],
+                  fill=RED)
     elif kind == "leaf":
         d.rectangle([x, y, x + w, y + h], fill=(220, 240, 220))
         d.ellipse([x + w - 22, y + 4, x + w - 6, y + 20], fill=(255, 214, 120))
@@ -282,6 +297,35 @@ def draw_hero_art(d, kind, x, y, w, h):
         cx, cy = x + w // 2, y + h // 2 - 2
         d.polygon([(cx, cy - 12), (cx + 12, cy), (cx, cy + 12), (cx - 12, cy)],
                   fill=(34, 139, 34))
+    elif kind == "virus":
+        d.rectangle([x, y, x + w, y + h], fill=(255, 240, 240))
+        cx, cy = x + w // 2, y + h // 2
+        for sx, sy in ((17, 0), (12, 12), (0, 17), (-12, 12), (-17, 0),
+                       (-12, -12), (0, -17), (12, -12)):
+            d.line([(cx + sx * 0.6, cy + sy * 0.6), (cx + sx, cy + sy)],
+                   fill=RED, width=3)
+        d.ellipse([cx - 11, cy - 11, cx + 11, cy + 11], fill=RED)
+        d.ellipse([cx - 4, cy - 6, cx + 2, cy + 0], fill=(255, 255, 255))
+    elif kind == "syringe":
+        d.rectangle([x, y, x + w, y + h], fill=(230, 240, 255))
+        cx, cy = x + w // 2, y + h // 2
+        d.polygon([(cx - 16, cy + 6), (cx + 2, cy - 12), (cx + 8, cy - 6),
+                   (cx - 10, cy + 12)], fill=(255, 255, 255), outline=NAVY, width=2)
+        d.line([(cx + 8, cy - 6), (cx + 22, cy - 20)], fill=NAVY, width=2)
+        d.line([(cx - 16, cy + 6), (cx - 24, cy + 14)], fill=NAVY, width=3)
+        d.ellipse([cx - 6, cy - 2, cx + 2, cy + 6], fill=RED)
+    elif kind == "docs":
+        d.rectangle([x, y, x + w, y + h], fill=SKY)
+        cx, cy = x + w // 2, y + h // 2
+        d.rectangle([cx - 26, cy - 12, cx + 6, cy + 12], fill=(255, 255, 255),
+                    outline=NAVY, width=2)
+        for ly in (cy - 6, cy, cy + 6):
+            d.line([(cx - 21, ly), (cx + 1, ly)], fill=NAVY2, width=2)
+        d.line([(cx + 16, cy - 14), (cx + 16, cy + 14)], fill=NAVY, width=2)
+        d.polygon([(cx + 16, cy - 14), (cx + 30, cy - 10), (cx + 16, cy - 6)],
+                  fill=RED)
+        d.polygon([(cx + 16, cy - 6), (cx + 30, cy - 2), (cx + 16, cy + 2)],
+                  fill=(255, 255, 255))
     else:
         d.rectangle([x, y, x + w, y + h], fill=SKY)
         d.ellipse([x + w // 2 - 12, y + h // 2 - 12, x + w // 2 + 12, y + h // 2 + 12],
@@ -344,7 +388,7 @@ def main():
         x = mx + c * (cw + gap_x)
         yy = cy0 + r * (ch + gap_y)
         d.rectangle([x, yy, x + cw, yy + ch], fill=PANEL, outline=RULE, width=1)
-        draw_hero_art(d, b["icon"], x + 1, yy + 1, cw - 2, 38)
+        draw_hero_art(d, b["icon"], x + 1, yy + 1, cw - 2, 48)
         # story number badge on the art band
         bx0, by0 = x + cw - 26, yy + 6
         d.ellipse([bx0, by0, bx0 + 20, by0 + 20], fill=RED,
@@ -353,10 +397,10 @@ def main():
         nw = d.textlength(num, font=SANS_B(11))
         d.text((bx0 + (20 - nw) / 2, by0 + 3), num, font=SANS_B(11),
                fill=(255, 255, 255))
-        d.text((x + 8, yy + 44), b["kicker"], font=SANS_B(9), fill=RED)
+        d.text((x + 8, yy + 53), b["kicker"], font=SANS_B(9), fill=RED)
         hf2 = SERIF_B(13)
         hlines = wrap(d, b["headline"], hf2, cw - 16)[:2]
-        hyy = draw_lines(d, hlines, x + 8, yy + 57, hf2, INK, 15)
+        hyy = draw_lines(d, hlines, x + 8, yy + 66, hf2, INK, 13)
         bf2 = SANS(10)
         blines = wrap(d, b["body"], bf2, cw - 16)[:1]
         draw_lines(d, blines, x + 8, hyy + 2, bf2, INK, 12)

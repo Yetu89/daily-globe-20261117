@@ -59,9 +59,12 @@ def main():
         if n > max_lines:
             fails.append(label)
 
+    hero_specs = [(SERIF_B(20), 591 - 20, 2, SERIF(13), 1),
+                  (SERIF_B(17), 349 - 20, 2, SERIF(12), 1)]
     for i, hero in enumerate(data["heroes"]):
-        check(f"hero{i+1} headline", hero["headline"], SERIF_B(19), hw - 20, 2)
-        check(f"hero{i+1} body", hero["body"], SERIF(12), hw - 20, 2)
+        hf, hw2, hm, bf, bm = hero_specs[i]
+        check(f"hero{i+1} headline", hero["headline"], hf, hw2, hm)
+        check(f"hero{i+1} body", hero["body"], bf, hw2, bm)
     for i, card in enumerate(data["cards"]):
         check(f"card{i+3} headline", card["headline"], SERIF_B(13), cw - 16, 2)
         check(f"card{i+3} body", card["body"], SANS(10), cw - 16, 1)

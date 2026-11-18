@@ -20,7 +20,11 @@ world map with numbered pins; "ALSO ON" 28 one-liners in 2 columns;
 sources footer. Flat vector drawings only, no photos, no AI images.
 Deterministic: same input bytes produce the same output bytes.
 v3 (Grok follow-up): art band 48px; chip/chart/virus/syringe/docs scenes
-redrawn per card so each reads at 300px; no duplicate plane/plus scenes.
+v4 (3-LLM consensus: not identical to rank 1): THE GLOBAL BRIEF masthead,
+gradient + gold line, left date + metric box; heroes 62:38, hero 2 inverted
+with INTERCEPTED badge + mini-Bahrain art; cards rounded + accent bar +
+badge bottom-left; map frameless, bigger pins + leader lines; also-on
+coloured numbers.
 
 Run:  python3 tools/build_image.py   (writes entry.png next to repo root)
 """
@@ -36,7 +40,7 @@ ROOT = os.path.dirname(HERE)
 W, H = 1024, 1024
 PAPER = (246, 241, 229)
 PANEL = (255, 253, 247)
-NAVY = (16, 36, 64)
+NAVY = (15, 28, 46)
 NAVY2 = (24, 52, 88)
 INK = (26, 26, 26)
 RED = (163, 22, 33)
@@ -46,6 +50,10 @@ GREY = (90, 86, 78)
 LIGHT = (232, 226, 210)
 RULE = (120, 112, 96)
 SKY = (214, 228, 238)
+GOLD = (210, 166, 74)
+ORANGE = (230, 126, 34)
+ACCENTS = [(74, 144, 217), (39, 174, 96), (231, 76, 60),
+           (243, 156, 18), (142, 68, 173)]
 
 FONT_DIR = "/usr/share/fonts/truetype/dejavu"
 
@@ -203,6 +211,13 @@ def draw_hero_art(d, kind, x, y, w, h):
         # smoke puffs above the blast
         for sx, sy in ((bx - 16, by - 18), (bx + 14, by - 20), (bx, by - 26)):
             d.ellipse([sx - 6, sy - 4, sx + 6, sy + 4], fill=(150, 150, 150))
+        # drone silhouette above the bridge + strait label
+        ddx, ddy = x + w // 2 + 20, y + 12
+        d.polygon([(ddx - 10, ddy), (ddx + 8, ddy - 3), (ddx + 8, ddy + 3)],
+                  fill=NAVY)
+        d.line([(ddx - 2, ddy - 1), (ddx + 1, ddy - 6)], fill=NAVY, width=2)
+        d.text((x + 6, y + h - 14), "KERCH STRAIT", font=SANS_B(9),
+               fill=(255, 255, 255))
     elif kind == "radar":
         # ground + dish
         gy = y + h - 16
@@ -326,6 +341,19 @@ def draw_hero_art(d, kind, x, y, w, h):
                   fill=RED)
         d.polygon([(cx + 16, cy - 6), (cx + 30, cy - 2), (cx + 16, cy + 2)],
                   fill=(255, 255, 255))
+    elif kind == "gulf":
+        d.rectangle([x, y, x + w, y + h], fill=(200, 225, 235))
+        cx, cy = x + w // 2, y + h // 2
+        # Bahrain island
+        d.polygon([(cx - 14, cy + 10), (cx - 8, cy - 12), (cx + 6, cy - 14),
+                   (cx + 14, cy + 2), (cx + 4, cy + 14)], fill=(214, 206, 184),
+                  outline=(110, 102, 86))
+        # drone dots with trails
+        for dx, dy in ((-38, -14), (34, -18), (40, 8)):
+            d.line([(cx + dx - 12, cy + dy), (cx + dx, cy + dy)], fill=RED, width=2)
+            d.ellipse([cx + dx - 3, cy + dy - 3, cx + dx + 3, cy + dy + 3],
+                      fill=RED)
+        d.ellipse([cx - 3, cy - 3, cx + 3, cy + 3], fill=NAVY)
     else:
         d.rectangle([x, y, x + w, y + h], fill=SKY)
         d.ellipse([x + w // 2 - 12, y + h // 2 - 12, x + w // 2 + 12, y + h // 2 + 12],
@@ -340,42 +368,73 @@ def main():
     d = ImageDraw.Draw(img)
     mx = 28
 
-    # ---------- navy masthead (rank 5 palette, rank 1 date) ----------
-    d.rectangle([0, 0, W, 150], fill=NAVY)
-    tf = SERIF_B(40)
-    tw = d.textlength(data["title"], font=tf)
-    d.text(((W - tw) / 2, 14), data["title"], font=tf, fill=(255, 255, 255))
-    df = SERIF_B(38)
-    dw = d.textlength(data["date_line"], font=df)
-    d.text(((W - dw) / 2, 62), data["date_line"], font=df, fill=(255, 255, 255))
-    sf = SANS_B(15)
-    sw = d.textlength(data["subtitle"], font=sf)
-    d.text(((W - sw) / 2, 108), data["subtitle"], font=sf, fill=(255, 214, 120))
+    # ---------- gradient masthead, left date + metric box (v4) ----------
+    for yy in range(150):
+        t = yy / 149.0
+        c = tuple(int(a + (b - a) * t) for a, b in zip(NAVY, (8, 16, 30)))
+        d.line([(0, yy), (W, yy)], fill=c)
+    tf = SERIF_B(30)
+    d.text((mx, 18), data["title"], font=tf, fill=(255, 255, 255))
+    df = SERIF_B(40)
+    d.text((mx, 56), data["date_line"], font=df, fill=(255, 255, 255))
+    # metric box, right
+    bx1, by1, bx2, by2 = W - mx - 210, 22, W - mx, 108
+    d.rectangle([bx1, by1, bx2, by2], outline=GOLD, width=2)
+    for j, line in enumerate(("40 STORIES", "6 CONTINENTS", "ONE DAY")):
+        lw3 = d.textlength(line, font=SANS_B(14))
+        d.text(((bx1 + bx2 - lw3) / 2, by1 + 10 + j * 26), line,
+               font=SANS_B(14), fill=GOLD)
+    d.line([(0, 146), (W, 146)], fill=GOLD, width=2)
     legend = ("WAR & SECURITY  •  POLITICS & DIPLOMACY  •  ECONOMY & MARKETS  •  "
               "HEALTH  •  SCIENCE & SPACE  •  CULTURE & SPORT  •  CLIMATE & DISASTERS")
     lf = SANS(10)
     lw = d.textlength(legend, font=lf)
     d.text(((W - lw) / 2, 132), legend, font=lf, fill=(170, 195, 220))
 
-    # ---------- heroes: 2 side by side (rank 1) ----------
+    # ---------- heroes: asymmetric 62:38 (v4), hero 2 inverted ----------
     hy, hh = 160, 168
-    hw = (W - 2 * mx - 14) // 2
+    total_w = W - 2 * mx - 14
+    hw1 = int(total_w * 0.62)
+    hw2 = total_w - hw1
+    widths = [hw1, hw2]
     for i, hero in enumerate(data["heroes"]):
-        x = mx + i * (hw + 14)
-        d.rectangle([x, hy, x + hw, hy + hh], fill=PANEL, outline=RULE, width=1)
-        draw_hero_art(d, hero["icon"], x + 1, hy + 1, hw - 2, 50)
-        ty = hy + 58
-        d.text((x + 10, ty), "%d  •  %s" % (i + 1, hero["kicker"]),
-               font=SANS_B(11), fill=RED)
-        ty += 17
-        hf = SERIF_B(19)
-        for ln in wrap(d, hero["headline"], hf, hw - 20)[:2]:
-            d.text((x + 10, ty), ln, font=hf, fill=INK)
-            ty += 22
-        bf = SERIF(12)
-        for ln in wrap(d, hero["body"], bf, hw - 20)[:2]:
-            d.text((x + 10, ty), ln, font=bf, fill=INK)
-            ty += 15
+        x = mx + (hw1 + 14 if i else 0)
+        w = widths[i]
+        d.rectangle([x, hy, x + w, hy + hh], fill=PANEL, outline=RULE, width=1)
+        if i == 0:
+            draw_hero_art(d, hero["icon"], x + 1, hy + 1, w - 2, 80)
+            ty = hy + 88
+            d.text((x + 10, ty), "%d  •  %s" % (i + 1, hero["kicker"]),
+                   font=SANS_B(11), fill=RED)
+            ty += 17
+            hf = SERIF_B(20)
+            for ln in wrap(d, hero["headline"], hf, w - 20)[:2]:
+                d.text((x + 10, ty), ln, font=hf, fill=INK)
+                ty += 23
+            bf = SERIF(13)
+            for ln in wrap(d, hero["body"], bf, w - 20)[:2]:
+                d.text((x + 10, ty), ln, font=bf, fill=INK)
+                ty += 16
+        else:
+            ty = hy + 10
+            d.text((x + 10, ty), "%d  •  %s" % (i + 1, hero["kicker"]),
+                   font=SANS_B(11), fill=RED)
+            badge = "INTERCEPTED"
+            bw2 = d.textlength(badge, font=SANS_B(9)) + 12
+            d.rectangle([x + w - bw2 - 8, hy + 8, x + w - 8, hy + 26],
+                        fill=(39, 174, 96))
+            d.text((x + w - bw2 - 2, hy + 11), badge, font=SANS_B(9),
+                   fill=(255, 255, 255))
+            ty += 17
+            hf = SERIF_B(17)
+            for ln in wrap(d, hero["headline"], hf, w - 20)[:2]:
+                d.text((x + 10, ty), ln, font=hf, fill=INK)
+                ty += 20
+            bf = SERIF(12)
+            for ln in wrap(d, hero["body"], bf, w - 20)[:1]:
+                d.text((x + 10, ty), ln, font=bf, fill=INK)
+                ty += 15
+            draw_hero_art(d, hero["icon"], x + 1, hy + hh - 71, w - 2, 70)
 
     # ---------- cards: 2 rows x 5 cols (rank 1), fixed pattern (rank 2) ----------
     cy0 = 338
@@ -387,20 +446,24 @@ def main():
         r, c = divmod(idx, cols)
         x = mx + c * (cw + gap_x)
         yy = cy0 + r * (ch + gap_y)
-        d.rectangle([x, yy, x + cw, yy + ch], fill=PANEL, outline=RULE, width=1)
-        draw_hero_art(d, b["icon"], x + 1, yy + 1, cw - 2, 48)
-        # story number badge on the art band
-        bx0, by0 = x + cw - 26, yy + 6
-        d.ellipse([bx0, by0, bx0 + 20, by0 + 20], fill=RED,
+        accent = ACCENTS[idx % len(ACCENTS)]
+        d.rounded_rectangle([x, yy, x + cw, yy + ch], radius=5, fill=PANEL,
+                            outline=RULE, width=1)
+        draw_hero_art(d, b["icon"], x + 1, yy + 1, cw - 2, 52)
+        # thin accent bar on the left edge
+        d.rectangle([x, yy + 6, x + 3, yy + ch - 6], fill=accent)
+        # story number badge, bottom-left of the art band
+        bx0, by0 = x + 6, yy + 52 - 26
+        d.ellipse([bx0, by0, bx0 + 20, by0 + 20], fill=NAVY,
                   outline=(255, 255, 255), width=2)
         num = str(idx + 3)
         nw = d.textlength(num, font=SANS_B(11))
         d.text((bx0 + (20 - nw) / 2, by0 + 3), num, font=SANS_B(11),
                fill=(255, 255, 255))
-        d.text((x + 8, yy + 53), b["kicker"], font=SANS_B(9), fill=RED)
+        d.text((x + 8, yy + 55), b["kicker"], font=SANS_B(9), fill=RED)
         hf2 = SERIF_B(13)
         hlines = wrap(d, b["headline"], hf2, cw - 16)[:2]
-        hyy = draw_lines(d, hlines, x + 8, yy + 66, hf2, INK, 13)
+        hyy = draw_lines(d, hlines, x + 8, yy + 67, hf2, INK, 12)
         bf2 = SANS(10)
         blines = wrap(d, b["body"], bf2, cw - 16)[:1]
         draw_lines(d, blines, x + 8, hyy + 2, bf2, INK, 12)
@@ -410,11 +473,13 @@ def main():
     fh = 388
     map_x, map_w = mx, 470
     list_x, list_w = mx + 482, W - mx - (mx + 482)
-    # map panel
-    d.rectangle([map_x, fy, map_x + map_w, fy + fh], fill=PANEL, outline=RULE, width=1)
+    # map area: frameless, continents straight on the paper (v4)
     d.text((map_x + 10, fy + 8), "WHERE IT HAPPENED", font=SANS_B(13), fill=INK)
     d.text((map_x + 10, fy + 27), "Numbers match the stories",
            font=SANS(11), fill=GREY)
+    lab = "6 CONTINENTS"
+    lw3 = d.textlength(lab, font=SANS_B(9))
+    d.text((map_x + map_w - lw3 - 10, fy + 10), lab, font=SANS_B(9), fill=GREY)
     px0, py0 = map_x + 8, fy + 50
     pw, ph = map_w - 16, 230
 
@@ -426,12 +491,14 @@ def main():
         pts = [project(lon, lat) for lon, lat in poly]
         d.polygon(pts, fill=(214, 206, 184), outline=(110, 102, 86))
     for dot in data["map_dots"]:
-        cx, cy = project(dot["lon"], dot["lat"])
-        cx += dot.get("dx", 0)
-        cy += dot.get("dy", 0)
-        r = 9
+        tx, ty = project(dot["lon"], dot["lat"])
+        cx = tx + dot.get("dx", 0)
+        cy = ty + dot.get("dy", 0)
+        if dot.get("dx", 0) or dot.get("dy", 0):
+            d.line([(tx, ty), (cx, cy)], fill=GREY, width=1)
+        r = 11
         d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=RED,
-                  outline=(255, 255, 255), width=2)
+                  outline=(255, 255, 255), width=3)
         label = str(dot["n"])
         lw = d.textlength(label, font=SANS_B(10))
         d.text((cx - lw / 2, cy - 7), label, font=SANS_B(10), fill=(255, 255, 255))
@@ -447,7 +514,9 @@ def main():
     # also-on panel
     d.rectangle([list_x, fy, list_x + list_w, fy + fh], fill=PANEL, outline=RULE, width=1)
     d.text((list_x + 10, fy + 8), "ALSO ON TUESDAY 17 NOVEMBER",
-           font=SANS_B(13), fill=INK)
+           font=SANS_B(11), fill=INK)
+    d.line([(list_x + 10, fy + 26), (list_x + list_w - 10, fy + 26)],
+           fill=RULE, width=1)
     col_w = (list_w - 20) / 2
     ay = fy + 30
     for i, item in enumerate(data["also_on"]):
@@ -456,7 +525,7 @@ def main():
         x = list_x + 10 + col * col_w
         yy = ay + row * 25
         num = "%d." % (i + 13)
-        d.text((x, yy), num, font=SANS_B(10), fill=RED)
+        d.text((x, yy), num, font=SANS_B(10), fill=ACCENTS[i % len(ACCENTS)])
         tx = x + d.textlength(num, font=SANS_B(10)) + 4
         for ln in wrap(d, item, SANS(10), col_w - (tx - x) - 8)[:1]:
             d.text((tx, yy), ln, font=SANS(10), fill=INK)
